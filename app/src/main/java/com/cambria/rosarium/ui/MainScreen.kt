@@ -1,6 +1,5 @@
 package com.cambria.rosarium.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,18 +8,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -35,7 +38,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.cambria.rosarium.viewmodel.MainViewModel
@@ -51,8 +53,7 @@ fun MainScreen(
     onOpenConfiguration: () -> Unit
 ) {
     val activePack = viewModel.activePack
-    val crownName = viewModel.crownDisplayName()
-    val firstMysteryTitle = viewModel.firstMysteryDisplayName()
+    val crownSet = viewModel.currentCrownSet
 
     var packMenuExpanded by remember { mutableStateOf(false) }
     var configMenuExpanded by remember { mutableStateOf(false) }
@@ -63,10 +64,7 @@ fun MainScreen(
                 title = { Text("Rosarium") },
                 actions = {
                     IconButton(onClick = { configMenuExpanded = true }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = "Menu configurazione"
-                        )
+                        Icon(Icons.Default.MoreVert, contentDescription = "Menu")
                     }
 
                     DropdownMenu(
@@ -90,29 +88,28 @@ fun MainScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
             Spacer(modifier = Modifier.height(8.dp))
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
                 Text(
                     text = "Set del Rosario",
                     style = MaterialTheme.typography.labelLarge,
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                OutlinedButton(
-                    onClick = { packMenuExpanded = true }
-                ) {
+                OutlinedButton(onClick = { packMenuExpanded = true }) {
                     Text(activePack.name)
-                    Icon(
-                        imageVector = Icons.Default.ArrowDropDown,
-                        contentDescription = "Seleziona pack"
-                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
                 }
 
                 DropdownMenu(
@@ -130,102 +127,105 @@ fun MainScreen(
                         )
                     }
                 }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = crownName,
-                    style = MaterialTheme.typography.headlineSmall,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = firstMysteryTitle,
-                    style = MaterialTheme.typography.titleMedium,
-                    textAlign = TextAlign.Center
-                )
             }
 
-            Image(
-                painter = painterResource(id = android.R.drawable.ic_menu_gallery),
-                contentDescription = "Immagine Rosario",
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(280.dp)
-            )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 28.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+                    Text(
+                        text = activePack.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = activePack.description,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = crownSet.title,
+                        style = MaterialTheme.typography.headlineMedium,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+
+                        OutlinedButton(
+                            onClick = { viewModel.previousCrown() }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FastRewind,
+                                contentDescription = "Corona precedente"
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        OutlinedButton(
+                            onClick = { viewModel.nextCrown() }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FastForward,
+                                contentDescription = "Corona successiva"
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = if (isPlaying) "Riproduzione in corso" else "Pronto",
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
                 Row(
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    modifier = Modifier.fillMaxWidth()
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(
-                        onClick = { viewModel.previousCrown() }
-                    ) {
+                    OutlinedButton(onClick = onPlayPause) {
                         Icon(
-                            imageVector = Icons.Default.FastRewind,
-                            contentDescription = "Corona precedente"
+                            imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            contentDescription = null
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(if (isPlaying) "Pausa" else "Riproduci")
                     }
 
-                    IconButton(
-                        onClick = { viewModel.nextCrown() }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FastForward,
-                            contentDescription = "Corona successiva"
-                        )
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    OutlinedButton(onClick = onStopPlayback) {
+                        Icon(Icons.Default.Stop, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Stop")
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                HorizontalDivider()
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = onPlayPause
-                    ) {
-                        Icon(
-                            imageVector = if (isPlaying) {
-                                Icons.Default.Pause
-                            } else {
-                                Icons.Default.PlayArrow
-                            },
-                            contentDescription = if (isPlaying) {
-                                "Pausa"
-                            } else {
-                                "Riproduci"
-                            }
-                        )
-                        Text(
-                            text = if (isPlaying) {
-                                " Pausa"
-                            } else {
-                                " Riproduci"
-                            }
-                        )
-                    }
-
-                    OutlinedButton(
-                        onClick = onStopPlayback
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Chiudi riproduzione"
-                        )
-                        Text(" Chiudi")
-                    }
-                }
+                Spacer(modifier = Modifier.height(16.dp))
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
         }
     }
 }

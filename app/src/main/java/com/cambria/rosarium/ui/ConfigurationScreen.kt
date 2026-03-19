@@ -12,14 +12,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -58,16 +57,12 @@ fun ConfigurationScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {
-                    Text("Configurazione")
-                },
+                title = { Text("Configurazione") },
                 navigationIcon = {
-                    IconButton(
-                        onClick = onBack
-                    ) {
+                    IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Torna indietro"
+                            contentDescription = "Indietro"
                         )
                     }
                 }
@@ -79,37 +74,60 @@ fun ConfigurationScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Top
         ) {
-
             Text(
-                text = "Gestione pack",
+                text = "Pack del Rosario",
                 style = MaterialTheme.typography.headlineSmall
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = newPackName,
-                onValueChange = { newPackName = it },
-                label = { Text("Nome nuovo pack") },
-                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Button(
-                onClick = {
-                    val created = viewModel.addPack(newPackName)
-                    newPackName = ""
-                    onPersistPacks()
-                    onPersistActivePack(created.id)
-                },
-                modifier = Modifier.fillMaxWidth()
+            Text(
+                text = "Ogni pack contiene 4 corone. Ogni corona usa un unico file MP3.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                Text("Inserisci pack")
+                Column(
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text(
+                        text = "Nuovo pack",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    OutlinedTextField(
+                        value = newPackName,
+                        onValueChange = { newPackName = it },
+                        label = { Text("Nome pack") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Button(
+                        onClick = {
+                            val created = viewModel.addPack(newPackName)
+                            newPackName = ""
+                            onPersistPacks()
+                            onPersistActivePack(created.id)
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Crea pack")
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -119,8 +137,11 @@ fun ConfigurationScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             viewModel.packs.forEach { pack ->
+                val isActive = viewModel.activePack.id == pack.id
+
                 Card(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = if (isActive) 3.dp else 1.dp)
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp)
@@ -132,9 +153,18 @@ fun ConfigurationScreen(
 
                         Spacer(modifier = Modifier.height(6.dp))
 
+                        if (pack.description.isNotBlank()) {
+                            Text(
+                                text = pack.description,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+                        }
+
                         Text(
-                            text = pack.description,
-                            style = MaterialTheme.typography.bodyMedium
+                            text = if (isActive) "Pack attivo" else "Pack disponibile",
+                            style = MaterialTheme.typography.bodySmall
                         )
 
                         Spacer(modifier = Modifier.height(14.dp))
@@ -161,7 +191,7 @@ fun ConfigurationScreen(
                                 onClick = {
                                     packToEdit = pack
                                     editName = pack.name
-                                    editDescription = pack.description
+                                    editDescription = ""
                                 },
                                 enabled = viewModel.canEditPack(pack)
                             ) {
@@ -170,40 +200,6 @@ fun ConfigurationScreen(
                                     contentDescription = "Modifica pack"
                                 )
                                 Text(" Modifica")
-                            }
-
-                            OutlinedButton(
-                                onClick = {
-                                    val moved = viewModel.movePackUp(pack.id)
-                                    if (moved) {
-                                        onPersistPacks()
-                                        onPersistActivePack(viewModel.activePack.id)
-                                    }
-                                },
-                                enabled = viewModel.canMovePackUp(pack)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowUpward,
-                                    contentDescription = "Sposta in alto"
-                                )
-                                Text(" Su")
-                            }
-
-                            OutlinedButton(
-                                onClick = {
-                                    val moved = viewModel.movePackDown(pack.id)
-                                    if (moved) {
-                                        onPersistPacks()
-                                        onPersistActivePack(viewModel.activePack.id)
-                                    }
-                                },
-                                enabled = viewModel.canMovePackDown(pack)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowDownward,
-                                    contentDescription = "Sposta in basso"
-                                )
-                                Text(" Giù")
                             }
 
                             OutlinedButton(
@@ -225,27 +221,28 @@ fun ConfigurationScreen(
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Nota: non è possibile cancellare l'ultimo pack rimasto.",
+                text = "L'ultimo pack rimasto non può essere cancellato.",
                 style = MaterialTheme.typography.bodySmall
             )
+
+            Spacer(modifier = Modifier.height(20.dp))
         }
 
         if (packToEdit != null) {
             AlertDialog(
                 onDismissRequest = { packToEdit = null },
-                title = {
-                    Text("Modifica pack")
-                },
+                title = { Text("Modifica pack") },
                 text = {
                     Column {
                         OutlinedTextField(
                             value = editName,
                             onValueChange = { editName = it },
                             label = { Text("Nome") },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
@@ -291,13 +288,9 @@ fun ConfigurationScreen(
         if (packToDelete != null) {
             AlertDialog(
                 onDismissRequest = { packToDelete = null },
-                title = {
-                    Text("Conferma cancellazione")
-                },
+                title = { Text("Conferma cancellazione") },
                 text = {
-                    Text(
-                        "Vuoi davvero cancellare il pack \"${packToDelete?.name}\"?"
-                    )
+                    Text("Vuoi davvero cancellare il pack \"${packToDelete?.name}\"?")
                 },
                 confirmButton = {
                     TextButton(

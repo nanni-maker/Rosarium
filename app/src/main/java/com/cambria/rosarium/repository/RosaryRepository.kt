@@ -51,26 +51,33 @@ object RosaryRepository {
     ): RosaryPack {
 
         fun mystery(number: Int, title: String): Mystery {
-            return Mystery(
-                number = number,
-                title = title
-            )
+            return Mystery(number, title)
+        }
+
+        fun suffix(type: CrownType): String {
+            return when (type) {
+                CrownType.JOYFUL -> "gioiosi"
+                CrownType.SORROWFUL -> "dolorosi"
+                CrownType.GLORIOUS -> "gloriosi"
+                CrownType.LUMINOUS -> "luminosi"
+            }
         }
 
         fun crown(
             type: CrownType,
             title: String,
-            audioSuffix: String,
             mysteries: List<Mystery>
         ): CrownSet {
+            val suf = suffix(type)
+
             return CrownSet(
                 type = type,
                 title = title,
                 mysteries = mysteries,
                 audioTrack = AudioTrack(
-                    id = "${id}_${audioSuffix}",
+                    id = "${id}_$suf",
                     title = title,
-                    assetPath = "audio/${id}_${audioSuffix}.mp3"
+                    assetPath = "audio/${id}_$suf.mp3"
                 )
             )
         }
@@ -82,10 +89,9 @@ object RosaryRepository {
             language = "it",
             crowns = listOf(
                 crown(
-                    type = CrownType.JOYFUL,
-                    title = "Misteri Gaudiosi",
-                    audioSuffix = "joyful",
-                    mysteries = listOf(
+                    CrownType.JOYFUL,
+                    "Misteri Gaudiosi",
+                    listOf(
                         mystery(1, "L'Annunciazione dell'Angelo a Maria"),
                         mystery(2, "La Visitazione di Maria a Santa Elisabetta"),
                         mystery(3, "La Nascita di Gesù a Betlemme"),
@@ -94,10 +100,9 @@ object RosaryRepository {
                     )
                 ),
                 crown(
-                    type = CrownType.SORROWFUL,
-                    title = "Misteri Dolorosi",
-                    audioSuffix = "sorrowful",
-                    mysteries = listOf(
+                    CrownType.SORROWFUL,
+                    "Misteri Dolorosi",
+                    listOf(
                         mystery(1, "L'Agonia di Gesù nell'Orto"),
                         mystery(2, "La Flagellazione di Gesù"),
                         mystery(3, "L'Incoronazione di spine"),
@@ -106,10 +111,9 @@ object RosaryRepository {
                     )
                 ),
                 crown(
-                    type = CrownType.GLORIOUS,
-                    title = "Misteri Gloriosi",
-                    audioSuffix = "glorious",
-                    mysteries = listOf(
+                    CrownType.GLORIOUS,
+                    "Misteri Gloriosi",
+                    listOf(
                         mystery(1, "La Risurrezione di Gesù"),
                         mystery(2, "L'Ascensione di Gesù al Cielo"),
                         mystery(3, "La Discesa dello Spirito Santo"),
@@ -118,10 +122,9 @@ object RosaryRepository {
                     )
                 ),
                 crown(
-                    type = CrownType.LUMINOUS,
-                    title = "Misteri Luminosi",
-                    audioSuffix = "luminous",
-                    mysteries = listOf(
+                    CrownType.LUMINOUS,
+                    "Misteri Luminosi",
+                    listOf(
                         mystery(1, "Il Battesimo di Gesù nel Giordano"),
                         mystery(2, "Le Nozze di Cana"),
                         mystery(3, "L'Annuncio del Regno di Dio"),

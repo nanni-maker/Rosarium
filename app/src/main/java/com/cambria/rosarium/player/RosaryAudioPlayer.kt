@@ -4,14 +4,16 @@ import android.content.Context
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.cambria.rosarium.core.CrownSet
 
 class RosaryAudioPlayer(
-    context: Context,
-    private val onPlaybackStateChanged: (isPlaying: Boolean) -> Unit
+    context: Context
 ) {
+
+    private var onPlaybackChangedListener: ((Boolean) -> Unit)? = null
 
     private val player: ExoPlayer =
         ExoPlayer.Builder(context).build().apply {
@@ -25,12 +27,12 @@ class RosaryAudioPlayer(
             addListener(
                 object : Player.Listener {
                     override fun onIsPlayingChanged(isPlaying: Boolean) {
-                        onPlaybackStateChanged(isPlaying)
+                        onPlaybackChangedListener?.invoke(isPlaying)
                     }
 
                     override fun onPlaybackStateChanged(playbackState: Int) {
                         if (playbackState == Player.STATE_ENDED) {
-                            onPlaybackStateChanged(false)
+                            onPlaybackChangedListener?.invoke(false)
                         }
                     }
                 }
@@ -38,6 +40,10 @@ class RosaryAudioPlayer(
         }
 
     private var currentCrownId: String? = null
+
+    fun setOnPlaybackChangedListener(listener: (Boolean) -> Unit) {
+        onPlaybackChangedListener = listener
+    }
 
     fun playOrPause(crownSet: CrownSet) {
         val requestedId = crownSet.audioTrack.id
@@ -57,7 +63,18 @@ class RosaryAudioPlayer(
     private fun playNewCrown(crownSet: CrownSet) {
         currentCrownId = crownSet.audioTrack.id
 
-        val mediaItem = MediaItem.fromUri("asset:///${crownSet.audioTrack.assetPath}")
+        val mediaItem = MediaItem.Builder()
+            .setMediaId(crownSet.audioTrack.id)
+            .setUri("asset:///${crownSet.audioTrack.assetPath}")
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setTitle(crownSet.title)
+                    .setArtist(crownSet.audioTrack.title)
+                    .setDisplayTitle(crownSet.title)
+                    .setSubtitle(crownSet.audioTrack.title)
+                    .build()
+            )
+            .build()
 
         player.setMediaItem(mediaItem)
         player.prepare()
@@ -72,11 +89,15 @@ class RosaryAudioPlayer(
         player.stop()
         player.clearMediaItems()
         currentCrownId = null
-        onPlaybackStateChanged(false)
+        onPlaybackChangedListener?.invoke(false)
     }
 
     fun isPlaying(): Boolean {
         return player.isPlaying
+    }
+
+    fun exoPlayer(): ExoPlayer {
+        return player
     }
 
     fun release() {
