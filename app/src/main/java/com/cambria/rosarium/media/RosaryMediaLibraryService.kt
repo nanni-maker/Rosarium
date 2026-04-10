@@ -1,5 +1,6 @@
 package com.cambria.rosarium.media
 
+import android.content.Intent
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -19,6 +20,9 @@ import kotlinx.coroutines.runBlocking
 class RosaryMediaLibraryService : MediaLibraryService() {
 
     companion object {
+        const val ACTION_START = "com.cambria.rosarium.action.MEDIA_LIBRARY_START"
+        const val ACTION_STOP = "com.cambria.rosarium.action.MEDIA_LIBRARY_STOP"
+
         private const val SESSION_ID = "rosarium_media_library_session"
         private const val ROOT_TITLE = "Rosarium"
     }
@@ -159,6 +163,29 @@ class RosaryMediaLibraryService : MediaLibraryService() {
             .build()
     }
 
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action) {
+            ACTION_START -> {
+                // Il solo scopo è assicurare che questo service sia vivo
+                // prima che parta la riproduzione da UI phone.
+            }
+
+            ACTION_STOP -> {
+                PlayerController.stop()
+                stopSelf()
+            }
+        }
+
+        return START_NOT_STICKY
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        if (!PlayerController.currentIsPlaying()) {
+            stopSelf()
+        }
+        super.onTaskRemoved(rootIntent)
+    }
+
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? {
         return mediaLibrarySession
     }
@@ -166,6 +193,7 @@ class RosaryMediaLibraryService : MediaLibraryService() {
     override fun onDestroy() {
         mediaLibrarySession?.release()
         mediaLibrarySession = null
+        PlayerController.stop()
         super.onDestroy()
     }
 
@@ -208,7 +236,6 @@ class RosaryMediaLibraryService : MediaLibraryService() {
     }
 
     private fun buildItem(mediaId: String): MediaItem? {
-
         if (RosaryMediaIds.isRoot(mediaId)) {
             return MediaItem.Builder()
                 .setMediaId(RosaryMediaIds.root())
@@ -300,7 +327,6 @@ class RosaryMediaLibraryService : MediaLibraryService() {
         startIndex: Int,
         startPositionMs: Long
     ): MediaItemsWithStartPosition? {
-
         val mediaId = mediaItem.mediaId
         if (mediaId.isBlank()) return null
 
@@ -344,9 +370,7 @@ class RosaryMediaLibraryService : MediaLibraryService() {
         }
 
         val safeIndex = safeStartIndex(startIndex, playlist.size)
-        RosaryPlaybackGateway.rememberCurrentMediaId(
-            playlist[safeIndex].mediaId
-        )
+        RosaryPlaybackGateway.rememberCurrentMediaId(playlist[safeIndex].mediaId)
     }
 
     private fun safeStartIndex(requestedIndex: Int, size: Int): Int {

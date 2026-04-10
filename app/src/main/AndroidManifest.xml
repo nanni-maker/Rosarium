@@ -25,12 +25,6 @@
         </activity>
 
         <service
-            android:name=".player.RosaryPlaybackService"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="mediaPlayback" />
-
-        <service
             android:name=".media.RosaryMediaLibraryService"
             android:enabled="true"
             android:exported="true"
@@ -40,6 +34,7 @@
                 <action android:name="android.media.browse.MediaBrowserService" />
             </intent-filter>
         </service>
+
     </application>
 
 </manifest>

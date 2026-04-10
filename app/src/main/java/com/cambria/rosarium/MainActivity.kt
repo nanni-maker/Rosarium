@@ -21,9 +21,9 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.lifecycleScope
 import com.cambria.rosarium.data.AppStore
 import com.cambria.rosarium.media.RosaryMediaIds
+import com.cambria.rosarium.media.RosaryMediaLibraryService
 import com.cambria.rosarium.media.RosaryPlaybackGateway
 import com.cambria.rosarium.player.PlayerController
-import com.cambria.rosarium.player.RosaryPlaybackService
 import com.cambria.rosarium.ui.ConfigurationScreen
 import com.cambria.rosarium.ui.MainScreen
 import com.cambria.rosarium.viewmodel.MainViewModel
@@ -146,8 +146,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun startPlaybackService() {
-        val intent = Intent(this, RosaryPlaybackService::class.java).apply {
-            action = RosaryPlaybackService.ACTION_START
+        val intent = Intent(this, RosaryMediaLibraryService::class.java).apply {
+            action = RosaryMediaLibraryService.ACTION_START
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -158,8 +158,8 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun stopPlaybackService() {
-        val intent = Intent(this, RosaryPlaybackService::class.java).apply {
-            action = RosaryPlaybackService.ACTION_STOP
+        val intent = Intent(this, RosaryMediaLibraryService::class.java).apply {
+            action = RosaryMediaLibraryService.ACTION_STOP
         }
         startService(intent)
     }
