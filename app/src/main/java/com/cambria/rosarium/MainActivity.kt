@@ -7,7 +7,6 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +25,7 @@ import com.cambria.rosarium.media.RosaryPlaybackGateway
 import com.cambria.rosarium.player.PlayerController
 import com.cambria.rosarium.ui.ConfigurationScreen
 import com.cambria.rosarium.ui.MainScreen
+import com.cambria.rosarium.ui.theme.RosariumTheme
 import com.cambria.rosarium.viewmodel.MainViewModel
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -77,14 +77,14 @@ class MainActivity : ComponentActivity() {
             }
 
             if (!isLoaded) {
-                MaterialTheme {
+                RosariumTheme {
                     Surface {
                     }
                 }
                 return@setContent
             }
 
-            MaterialTheme {
+            RosariumTheme {
                 Surface {
                     if (showConfiguration) {
                         ConfigurationScreen(

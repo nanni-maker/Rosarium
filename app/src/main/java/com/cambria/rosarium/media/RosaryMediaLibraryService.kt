@@ -1,7 +1,13 @@
 package com.cambria.rosarium.media
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Intent
+import android.os.Build
 import androidx.annotation.OptIn
+import androidx.core.app.NotificationCompat
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
@@ -9,12 +15,19 @@ import androidx.media3.session.LibraryResult
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSession.MediaItemsWithStartPosition
+import com.cambria.rosarium.R
 import com.cambria.rosarium.data.AppStore
 import com.cambria.rosarium.player.PlayerController
 import com.cambria.rosarium.repository.RosaryRepository
 import com.google.common.collect.ImmutableList
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 class RosaryMediaLibraryService : MediaLibraryService() {
@@ -25,9 +38,20 @@ class RosaryMediaLibraryService : MediaLibraryService() {
 
         private const val SESSION_ID = "rosarium_media_library_session"
         private const val ROOT_TITLE = "Rosarium"
+
+        private const val CHANNEL_ID = "rosarium_media_playback"
+        private const val CHANNEL_NAME = "Rosarium Playback"
+        private const val NOTIFICATION_ID = 1001
+        private const val REQUEST_CODE_STOP = 3001
+
+        private const val DEFAULT_TITLE = "Rosario"
+        private const val DEFAULT_SUBTITLE = "Riproduzione audio"
     }
 
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+
     private var mediaLibrarySession: MediaLibrarySession? = null
+    private var foregroundStarted = false
 
     private val callback = object : MediaLibrarySession.Callback {
 
@@ -151,6 +175,8 @@ class RosaryMediaLibraryService : MediaLibraryService() {
     override fun onCreate() {
         super.onCreate()
 
+        createNotificationChannel()
+
         PlayerController.initialize(applicationContext)
         loadPacksIntoGateway()
 
@@ -161,17 +187,19 @@ class RosaryMediaLibraryService : MediaLibraryService() {
         )
             .setId(SESSION_ID)
             .build()
+
+        observePlaybackState()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_START -> {
-                // Il solo scopo è assicurare che questo service sia vivo
-                // prima che parta la riproduzione da UI phone.
+                ensureForeground()
             }
 
             ACTION_STOP -> {
                 PlayerController.stop()
+                stopForegroundIfNeeded()
                 stopSelf()
             }
         }
@@ -181,6 +209,7 @@ class RosaryMediaLibraryService : MediaLibraryService() {
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         if (!PlayerController.currentIsPlaying()) {
+            stopForegroundIfNeeded()
             stopSelf()
         }
         super.onTaskRemoved(rootIntent)
@@ -191,10 +220,98 @@ class RosaryMediaLibraryService : MediaLibraryService() {
     }
 
     override fun onDestroy() {
+        serviceScope.cancel()
         mediaLibrarySession?.release()
         mediaLibrarySession = null
         PlayerController.stop()
+        stopForegroundIfNeeded()
         super.onDestroy()
+    }
+
+    private fun observePlaybackState() {
+        serviceScope.launch {
+            PlayerController.isPlaying.collectLatest { isPlaying ->
+                if (isPlaying) {
+                    ensureForeground()
+                } else {
+                    refreshNotificationIfForeground()
+                }
+            }
+        }
+    }
+
+    private fun ensureForeground() {
+        val notification = buildNotification()
+        startForeground(NOTIFICATION_ID, notification)
+        foregroundStarted = true
+    }
+
+    private fun refreshNotificationIfForeground() {
+        if (!foregroundStarted) return
+        val manager = getSystemService(NotificationManager::class.java)
+        manager.notify(NOTIFICATION_ID, buildNotification())
+    }
+
+    private fun stopForegroundIfNeeded() {
+        if (!foregroundStarted) return
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        foregroundStarted = false
+    }
+
+    private fun buildNotification(): Notification {
+        val stopIntent = Intent(this, RosaryMediaLibraryService::class.java).apply {
+            action = ACTION_STOP
+        }
+
+        val stopPendingIntent = PendingIntent.getService(
+            this,
+            REQUEST_CODE_STOP,
+            stopIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or pendingIntentImmutableFlag()
+        )
+
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(resolveNotificationTitle())
+            .setContentText(resolveNotificationSubtitle())
+            .setOngoing(PlayerController.currentIsPlaying())
+            .setOnlyAlertOnce(true)
+            .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
+            .addAction(android.R.drawable.ic_media_pause, "Stop", stopPendingIntent)
+            .build()
+    }
+
+    private fun resolveNotificationTitle(): String {
+        return RosaryPlaybackGateway.currentTitle()
+            ?: PlayerController.currentCrown()?.title
+            ?: DEFAULT_TITLE
+    }
+
+    private fun resolveNotificationSubtitle(): String {
+        return RosaryPlaybackGateway.currentSubtitle()
+            ?: PlayerController.currentCrown()?.audioTrack?.title
+            ?: DEFAULT_SUBTITLE
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+
+        val manager = getSystemService(NotificationManager::class.java)
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            CHANNEL_NAME,
+            NotificationManager.IMPORTANCE_LOW
+        )
+
+        manager.createNotificationChannel(channel)
+    }
+
+    private fun pendingIntentImmutableFlag(): Int {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            PendingIntent.FLAG_IMMUTABLE
+        } else {
+            0
+        }
     }
 
     private fun loadPacksIntoGateway() {

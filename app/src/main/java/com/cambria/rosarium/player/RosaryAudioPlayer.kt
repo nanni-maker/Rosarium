@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.cambria.rosarium.core.CrownSet
@@ -17,12 +16,19 @@ class RosaryAudioPlayer(
 
     private val player: ExoPlayer =
         ExoPlayer.Builder(context).build().apply {
+
             val audioAttributes = AudioAttributes.Builder()
                 .setUsage(C.USAGE_MEDIA)
                 .setContentType(C.AUDIO_CONTENT_TYPE_SPEECH)
                 .build()
 
             setAudioAttributes(audioAttributes, true)
+
+            // Volume massimo lato app
+            volume = 1.0f
+
+            // Gestione disconnessione cuffie / BT
+            setHandleAudioBecomingNoisy(true)
 
             addListener(
                 object : Player.Listener {
@@ -63,18 +69,7 @@ class RosaryAudioPlayer(
     private fun playNewCrown(crownSet: CrownSet) {
         currentCrownId = crownSet.audioTrack.id
 
-        val mediaItem = MediaItem.Builder()
-            .setMediaId(crownSet.audioTrack.id)
-            .setUri("asset:///${crownSet.audioTrack.assetPath}")
-            .setMediaMetadata(
-                MediaMetadata.Builder()
-                    .setTitle(crownSet.title)
-                    .setArtist(crownSet.audioTrack.title)
-                    .setDisplayTitle(crownSet.title)
-                    .setSubtitle(crownSet.audioTrack.title)
-                    .build()
-            )
-            .build()
+        val mediaItem = MediaItem.fromUri("asset:///${crownSet.audioTrack.assetPath}")
 
         player.setMediaItem(mediaItem)
         player.prepare()

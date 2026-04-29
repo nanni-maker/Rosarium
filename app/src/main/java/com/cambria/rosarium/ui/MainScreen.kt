@@ -1,6 +1,8 @@
 package com.cambria.rosarium.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,18 +21,25 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +47,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.cambria.rosarium.viewmodel.MainViewModel
@@ -58,10 +68,30 @@ fun MainScreen(
     var packMenuExpanded by remember { mutableStateOf(false) }
     var configMenuExpanded by remember { mutableStateOf(false) }
 
+    val backgroundBrush = Brush.verticalGradient(
+        colors = listOf(
+            MaterialTheme.colorScheme.background,
+            MaterialTheme.colorScheme.surface,
+            MaterialTheme.colorScheme.background
+        )
+    )
+
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
-                title = { Text("Rosarium") },
+                title = {
+                    Text(
+                        text = "Rosarium",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.primary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onBackground
+                ),
                 actions = {
                     IconButton(onClick = { configMenuExpanded = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Menu")
@@ -84,147 +114,180 @@ fun MainScreen(
         }
     ) { innerPadding ->
 
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
+                .background(backgroundBrush)
                 .padding(innerPadding)
-                .padding(horizontal = 20.dp, vertical = 16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
-                Text(
-                    text = "Set del Rosario",
-                    style = MaterialTheme.typography.labelLarge,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                OutlinedButton(onClick = { packMenuExpanded = true }) {
-                    Text(activePack.name)
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Icon(Icons.Default.ArrowDropDown, contentDescription = null)
-                }
-
-                DropdownMenu(
-                    expanded = packMenuExpanded,
-                    onDismissRequest = { packMenuExpanded = false }
-                ) {
-                    viewModel.packs.forEach { pack ->
-                        DropdownMenuItem(
-                            text = { Text(pack.name) },
-                            onClick = {
-                                packMenuExpanded = false
-                                viewModel.selectPack(pack.id)
-                                onPackSelected(pack.id)
-                            }
-                        )
-                    }
-                }
-            }
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp, vertical = 18.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 28.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
                     Text(
-                        text = activePack.name,
-                        style = MaterialTheme.typography.titleLarge,
+                        text = "Set del Rosario",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    Text(
-                        text = activePack.description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center
-                    )
+                    OutlinedButton(onClick = { packMenuExpanded = true }) {
+                        Text(activePack.name)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                    }
 
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    Text(
-                        text = crownSet.title,
-                        style = MaterialTheme.typography.headlineMedium,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    Row(
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                    DropdownMenu(
+                        expanded = packMenuExpanded,
+                        onDismissRequest = { packMenuExpanded = false }
                     ) {
-
-                        OutlinedButton(
-                            onClick = { viewModel.previousCrown() }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.FastRewind,
-                                contentDescription = "Corona precedente"
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(16.dp))
-
-                        OutlinedButton(
-                            onClick = { viewModel.nextCrown() }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.FastForward,
-                                contentDescription = "Corona successiva"
+                        viewModel.packs.forEach { pack ->
+                            DropdownMenuItem(
+                                text = { Text(pack.name) },
+                                onClick = {
+                                    packMenuExpanded = false
+                                    viewModel.selectPack(pack.id)
+                                    onPackSelected(pack.id)
+                                }
                             )
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = if (isPlaying) "Riproduzione in corso" else "Pronto",
-                        style = MaterialTheme.typography.bodyMedium,
-                        textAlign = TextAlign.Center
-                    )
                 }
-            }
 
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Spacer(modifier = Modifier.height(22.dp))
 
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp),
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
                 ) {
-                    OutlinedButton(onClick = onPlayPause) {
-                        Icon(
-                            imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            contentDescription = null
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp, vertical = 34.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = activePack.name,
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            textAlign = TextAlign.Center
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(if (isPlaying) "Pausa" else "Riproduci")
+
+                        if (activePack.description.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(
+                                text = activePack.description,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(32.dp))
+
+                        Text(
+                            text = crownSet.title,
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.height(20.dp))
+
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
+                        ) {
+                            Text(
+                                modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
+                                text = if (isPlaying) "In ascolto" else "Pronto all’ascolto",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(30.dp))
+
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            FilledTonalIconButton(
+                                onClick = { viewModel.previousCrown() },
+                                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.FastRewind,
+                                    contentDescription = "Corona precedente"
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(22.dp))
+
+                            Button(
+                                onClick = onPlayPause,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                    contentDescription = null
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Text(if (isPlaying) "Pausa" else "Riproduci")
+                            }
+
+                            Spacer(modifier = Modifier.width(22.dp))
+
+                            FilledTonalIconButton(
+                                onClick = { viewModel.nextCrown() },
+                                colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.FastForward,
+                                    contentDescription = "Corona successiva"
+                                )
+                            }
+                        }
                     }
+                }
 
-                    Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.height(26.dp))
 
-                    OutlinedButton(onClick = onStopPlayback) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    FilledTonalButton(onClick = onStopPlayback) {
                         Icon(Icons.Default.Stop, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Stop")
+                        Text("Interrompi")
                     }
-                }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(18.dp))
+                }
             }
         }
     }
