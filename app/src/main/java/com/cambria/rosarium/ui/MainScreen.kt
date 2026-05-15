@@ -1,5 +1,13 @@
 package com.cambria.rosarium.ui
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,8 +18,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -23,20 +33,19 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalIconButton
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -47,7 +56,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.cambria.rosarium.viewmodel.MainViewModel
@@ -76,6 +88,15 @@ fun MainScreen(
         )
     )
 
+    val playButtonScale by animateFloatAsState(
+        targetValue = if (isPlaying) 1.04f else 1.0f,
+        animationSpec = spring(
+            dampingRatio = 0.55f,
+            stiffness = 350f
+        ),
+        label = "playButtonScale"
+    )
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -84,6 +105,7 @@ fun MainScreen(
                     Text(
                         text = "Rosarium",
                         style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary
                     )
                 },
@@ -120,10 +142,11 @@ fun MainScreen(
                 .background(backgroundBrush)
                 .padding(innerPadding)
         ) {
+
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 20.dp, vertical = 18.dp)
+                    .padding(horizontal = 22.dp, vertical = 18.dp)
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -133,19 +156,27 @@ fun MainScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+
                     Text(
-                        text = "Set del Rosario",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
+                        text = "SET DEL ROSARIO",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    OutlinedButton(onClick = { packMenuExpanded = true }) {
+                    OutlinedButton(
+                        onClick = { packMenuExpanded = true },
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
                         Text(activePack.name)
+
                         Spacer(modifier = Modifier.width(6.dp))
-                        Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+
+                        Icon(
+                            Icons.Default.ArrowDropDown,
+                            contentDescription = null
+                        )
                     }
 
                     DropdownMenu(
@@ -165,29 +196,37 @@ fun MainScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(22.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
                 ElevatedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .animateContentSize(),
+                    shape = RoundedCornerShape(28.dp),
+                    elevation = CardDefaults.elevatedCardElevation(
+                        defaultElevation = 10.dp
+                    ),
                     colors = CardDefaults.elevatedCardColors(
                         containerColor = MaterialTheme.colorScheme.surface
                     )
                 ) {
+
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 34.dp),
+                            .padding(horizontal = 28.dp, vertical = 36.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+
                         Text(
                             text = activePack.name,
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primary,
                             textAlign = TextAlign.Center
                         )
 
                         if (activePack.description.isNotBlank()) {
+
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Text(
@@ -198,39 +237,83 @@ fun MainScreen(
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(42.dp))
 
-                        Text(
-                            text = crownSet.title,
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            textAlign = TextAlign.Center
-                        )
+                        AnimatedContent(
+                            targetState = crownSet.title,
+                            transitionSpec = {
+                                fadeIn() togetherWith fadeOut()
+                            },
+                            label = "crownTitleAnimation"
+                        ) { title ->
 
-                        Spacer(modifier = Modifier.height(20.dp))
-
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        ) {
                             Text(
-                                modifier = Modifier.padding(horizontal = 18.dp, vertical = 8.dp),
-                                text = if (isPlaying) "In ascolto" else "Pronto all’ascolto",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                text = title,
+                                style = MaterialTheme.typography.displaySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 textAlign = TextAlign.Center
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(30.dp))
+                        Spacer(modifier = Modifier.height(26.dp))
+
+                        Surface(
+                            shape = RoundedCornerShape(50.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant
+                        ) {
+
+                            Row(
+                                modifier = Modifier.padding(
+                                    horizontal = 18.dp,
+                                    vertical = 8.dp
+                                ),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .clip(RoundedCornerShape(50))
+                                        .background(
+                                            if (isPlaying) {
+                                                MaterialTheme.colorScheme.primary
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurfaceVariant
+                                            }
+                                        )
+                                )
+
+                                Spacer(modifier = Modifier.width(10.dp))
+
+                                Crossfade(
+                                    targetState = isPlaying,
+                                    label = "playbackStateCrossfade"
+                                ) { playing ->
+
+                                    Text(
+                                        text = if (playing) {
+                                            "RIPRODUZIONE"
+                                        } else {
+                                            "PRONTO"
+                                        },
+                                        style = MaterialTheme.typography.labelLarge,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(38.dp))
 
                         Row(
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
                         ) {
+
                             FilledTonalIconButton(
                                 onClick = { viewModel.previousCrown() },
+                                modifier = Modifier.size(58.dp),
                                 colors = IconButtonDefaults.filledTonalIconButtonColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
                                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -246,23 +329,54 @@ fun MainScreen(
 
                             Button(
                                 onClick = onPlayPause,
+                                modifier = Modifier
+                                    .height(58.dp)
+                                    .scale(playButtonScale),
+                                shape = RoundedCornerShape(18.dp),
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.primary,
                                     contentColor = MaterialTheme.colorScheme.onPrimary
                                 )
                             ) {
-                                Icon(
-                                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                    contentDescription = null
-                                )
+
+                                Crossfade(
+                                    targetState = isPlaying,
+                                    label = "playPauseIconCrossfade"
+                                ) { playing ->
+
+                                    Icon(
+                                        imageVector = if (playing) {
+                                            Icons.Default.Pause
+                                        } else {
+                                            Icons.Default.PlayArrow
+                                        },
+                                        contentDescription = null
+                                    )
+                                }
+
                                 Spacer(modifier = Modifier.width(10.dp))
-                                Text(if (isPlaying) "Pausa" else "Riproduci")
+
+                                Crossfade(
+                                    targetState = isPlaying,
+                                    label = "playPauseTextCrossfade"
+                                ) { playing ->
+
+                                    Text(
+                                        text = if (playing) {
+                                            "PAUSA"
+                                        } else {
+                                            "RIPRODUCI"
+                                        },
+                                        style = MaterialTheme.typography.labelLarge
+                                    )
+                                }
                             }
 
                             Spacer(modifier = Modifier.width(22.dp))
 
                             FilledTonalIconButton(
                                 onClick = { viewModel.nextCrown() },
+                                modifier = Modifier.size(58.dp),
                                 colors = IconButtonDefaults.filledTonalIconButtonColors(
                                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
                                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -277,17 +391,23 @@ fun MainScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(26.dp))
+                Spacer(modifier = Modifier.height(28.dp))
 
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    FilledTonalButton(onClick = onStopPlayback) {
-                        Icon(Icons.Default.Stop, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Interrompi")
-                    }
-
-                    Spacer(modifier = Modifier.height(18.dp))
+                FilledTonalIconButton(
+                    onClick = onStopPlayback,
+                    modifier = Modifier.size(56.dp),
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Stop,
+                        contentDescription = "Stop"
+                    )
                 }
+
+                Spacer(modifier = Modifier.height(12.dp))
             }
         }
     }
