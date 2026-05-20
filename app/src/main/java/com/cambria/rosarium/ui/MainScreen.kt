@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.MoreVert
@@ -72,7 +73,8 @@ fun MainScreen(
     onPlayPause: () -> Unit,
     onStopPlayback: () -> Unit,
     onPackSelected: (String) -> Unit,
-    onOpenConfiguration: () -> Unit
+    onOpenConfiguration: () -> Unit,
+    onExitApp: () -> Unit
 ) {
     val activePack = viewModel.activePack
     val crownSet = viewModel.currentCrownSet
@@ -115,6 +117,23 @@ fun MainScreen(
                     actionIconContentColor = MaterialTheme.colorScheme.onBackground
                 ),
                 actions = {
+
+                    FilledTonalIconButton(
+                        onClick = onExitApp,
+                        modifier = Modifier.size(40.dp),
+                        colors = IconButtonDefaults.filledTonalIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Chiudi app"
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
                     IconButton(onClick = { configMenuExpanded = true }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Menu")
                     }
